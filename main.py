@@ -104,6 +104,9 @@ class MainWindow(QMainWindow):
             # Filter out the boxes with low confidence
             all_boxes= all_boxes[np.all(all_boxes > 0, axis=1)]
 
+            # Take only first 10 boxes
+            all_boxes = all_boxes[:10]
+
                 # Get the class ID and label
             class_id = int(detections['detection_classes'][i].numpy()[0])
             class_name = self.get_class_name(class_id)
@@ -141,14 +144,16 @@ class MainWindow(QMainWindow):
         font_thickness = 1
 
         # Calculate the size of the label and create a filled rectangle as the background
-        label = f"{class_name}: {score:.2f}"
+        # label = f"{class_name}: {score:.2f}"
+        # Change first character to uppercase of class_name and convert score to percentage
+        label = f"{class_name.capitalize()}: {score*100:.2f}%"
         (label_width, label_height), baseline = cv2.getTextSize(label, font, font_scale, font_thickness)
-        label_background_start = (start_point[0], start_point[1] - label_height - baseline - 5)
+        label_background_start = (start_point[0], start_point[1] - label_height - baseline + 2)
         label_background_end = (start_point[0] + label_width, start_point[1])
         image = cv2.rectangle(image, label_background_start, label_background_end, label_bg_color, thickness=cv2.FILLED)
 
         # Put the label text on top of the background
-        label_offset = (start_point[0], start_point[1] - 5)
+        label_offset = (start_point[0], start_point[1] - 1)
         image = cv2.putText(image, label, label_offset, font, font_scale, text_color, font_thickness, cv2.LINE_AA)
 
         return image
