@@ -52,7 +52,7 @@ class MainWindow(QMainWindow):
         ret, self.image = self.capture.read()
 
         # Flip the image horizontally
-        self.image = cv2.flip(self.image, 1)
+        # self.image = cv2.flip(self.image, 1)
 
         if ret:
             # Object detection
@@ -88,35 +88,66 @@ class MainWindow(QMainWindow):
         detections = detect_fn(**input_dict)
 
         # Process the detections
-        for i in range(len(detections['detection_scores'])):  # Iterate over all possible detections
+        num_detections = len(detections['num_detections'])
+        # print(f"Detected {num_detections} objects")
+        for i in range(num_detections):  # Iterate over all possible detections
             score = detections['detection_scores'][i].numpy()[0]
-            if score < 0.5:  # Skip detections with a low score
-                continue
+            # if score < 0.5:  # Skip detections with a low score
+            #     continue
 
-            box = detections['detection_boxes'][i].numpy()[:4]  # Adjusted to handle multi-dimensional box
+            # Extract the bounding box coordinates
+            # box = detections['detection_boxes'][i].numpy()[:4]  # Adjusted to handle multi-dimensional box
+            # ymin, xmin, ymax, xmax = box[0], box[1], box[2], box[3]
+
+            all_boxes = detections['detection_boxes'][i].numpy()
+
+            # Filter out the boxes with low confidence
+            all_boxes= all_boxes[np.all(all_boxes > 0, axis=1)]
+
+                # Get the class ID and label
             class_id = int(detections['detection_classes'][i].numpy()[0])
             class_name = self.get_class_name(class_id)
 
-            image = self.draw_box(image, box, class_name, score)
+            # image = self.draw_box(image, box, class_name, score)
+
+            # Loop through box
+            for j in range(len(all_boxes)):
+                # if box[j] > 0:
+                image = self.draw_box(image, all_boxes[j], class_name, score)
+
 
         return image
 
     def draw_box(self, image, box, class_name, score):
-        # Assuming box is a 2D array with the required values in the first row
-        ymin, xmin, ymax, xmax = box[0]
+        # Draw a bounding box and label on the image
         h, w, _ = image.shape
+        ymin, xmin, ymax, xmax = box
         start_point = (int(xmin * w), int(ymin * h))
         end_point = (int(xmax * w), int(ymax * h))
-        # color = (0, 255, 0)  # Green color for the box
-        # red color for the box
-        color = (0, 0, 255)
-        thickness = 2
+
+        # Grey color for the box
+        color = (192, 192, 192)
+
+        # Text color is black
+        text_color = (0, 0, 0)
+        thickness = 1
         image = cv2.rectangle(image, start_point, end_point, color, thickness)
 
-        # Put a label near the box
+        # Define the font for the label
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        font_scale = 0.5
+        font_thickness = 1
+
+        # Calculate the size of the label and create a filled rectangle as the background
         label = f"{class_name}: {score:.2f}"
-        image = cv2.putText(image, label, start_point, cv2.FONT_HERSHEY_SIMPLEX, 
-                        0.5, color, 2, cv2.LINE_AA)
+        (label_width, label_height), baseline = cv2.getTextSize(label, font, font_scale, font_thickness)
+        label_background_start = start_point
+        label_background_end = (start_point[0] + label_width, start_point[1] - label_height - baseline)
+        image = cv2.rectangle(image, label_background_start, label_background_end, color, thickness=cv2.FILLED)
+
+        # Put the label text on top of the background
+        label_offset = (start_point[0], start_point[1] - 5)  # Adjust position to be above the box
+        image = cv2.putText(image, label, label_offset, font, font_scale, text_color, font_thickness, cv2.LINE_AA)
         return image
 
     def get_class_name(self, class_id):
