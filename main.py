@@ -125,33 +125,52 @@ class MainWindow(QMainWindow):
         start_point = (int(xmin * w), int(ymin * h))
         end_point = (int(xmax * w), int(ymax * h))
 
-        # Grey color for the box
-        color = (192, 192, 192)
-
-        # Text color is black
-        text_color = (0, 0, 0)
-        thickness = 1
-        image = cv2.rectangle(image, start_point, end_point, color, thickness)
+        # Green color for the box border
+        box_color = (0, 255, 0)  # Green color
+        # White color for the label background
+        label_bg_color = (255, 255, 255)  # White color
+        # Black color for the text
+        text_color = (0, 0, 0)  # Black color
+        box_thickness = 2
+        image = cv2.rectangle(image, start_point, end_point, box_color, box_thickness)
 
         # Define the font for the label
         font = cv2.FONT_HERSHEY_SIMPLEX
-        font_scale = 0.5
+        # Smaller font size
+        font_scale = 0.4
         font_thickness = 1
 
         # Calculate the size of the label and create a filled rectangle as the background
         label = f"{class_name}: {score:.2f}"
         (label_width, label_height), baseline = cv2.getTextSize(label, font, font_scale, font_thickness)
-        label_background_start = start_point
-        label_background_end = (start_point[0] + label_width, start_point[1] - label_height - baseline)
-        image = cv2.rectangle(image, label_background_start, label_background_end, color, thickness=cv2.FILLED)
+        label_background_start = (start_point[0], start_point[1] - label_height - baseline - 5)
+        label_background_end = (start_point[0] + label_width, start_point[1])
+        image = cv2.rectangle(image, label_background_start, label_background_end, label_bg_color, thickness=cv2.FILLED)
 
         # Put the label text on top of the background
-        label_offset = (start_point[0], start_point[1] - 5)  # Adjust position to be above the box
+        label_offset = (start_point[0], start_point[1] - 5)
         image = cv2.putText(image, label, label_offset, font, font_scale, text_color, font_thickness, cv2.LINE_AA)
+
         return image
 
     def get_class_name(self, class_id):
-        class_names = {1: "person", 2: "bicycle", 3: "car",}  # Complete this based on the model's dataset
+        class_names = {
+            1: 'person', 2: 'bicycle', 3: 'car', 4: 'motorcycle', 5: 'airplane',
+            6: 'bus', 7: 'train', 8: 'truck', 9: 'boat', 10: 'traffic light',
+            11: 'fire hydrant', 13: 'stop sign', 14: 'parking meter', 15: 'bench',
+            16: 'bird', 17: 'cat', 18: 'dog', 19: 'horse', 20: 'sheep', 21: 'cow',
+            22: 'elephant', 23: 'bear', 24: 'zebra', 25: 'giraffe', 27: 'backpack',
+            28: 'umbrella', 31: 'handbag', 32: 'tie', 33: 'suitcase', 34: 'frisbee',
+            35: 'skis', 36: 'snowboard', 37: 'sports ball', 38: 'kite', 39: 'baseball bat',
+            40: 'baseball glove', 41: 'skateboard', 42: 'surfboard', 43: 'tennis racket',
+            44: 'bottle', 46: 'wine glass', 47: 'cup', 48: 'fork', 49: 'knife', 50: 'spoon',
+            51: 'bowl', 52: 'banana', 53: 'apple', 54: 'sandwich', 55: 'orange', 56: 'broccoli',
+            57: 'carrot', 58: 'hot dog', 59: 'pizza', 60: 'donut', 61: 'cake', 62: 'chair',
+            63: 'couch', 64: 'potted plant', 65: 'bed', 67: 'dining table', 70: 'toilet',
+            72: 'tv', 73: 'laptop', 74: 'mouse', 75: 'remote', 76: 'keyboard', 77: 'cell phone',
+            78: 'microwave', 79: 'oven', 80: 'toaster', 81: 'sink', 82: 'refrigerator', 84: 'book',
+            85: 'clock', 86: 'vase', 87: 'scissors', 88: 'teddy bear', 89: 'hair drier', 90: 'toothbrush'
+        }  # Complete this based on the model's dataset
         return class_names.get(class_id, "Unknown")
 
 
