@@ -33,7 +33,7 @@ class MainWindow(QMainWindow):
 
         if ret:
             # Object detection
-            self.detect_objects(self.image)
+            self.image = self.detect_objects(self.image)
 
             # Convert to Qt format
             image = cv2.cvtColor(self.image, cv2.COLOR_BGR2RGB)
@@ -57,17 +57,42 @@ class MainWindow(QMainWindow):
         # Run detection
         detections = detect_fn(**input_dict)
 
-        # Process detections (bounding boxes, scores, etc.)
-        # ...
+        # Process the detections
+        for i in range(len(detections['detection_scores'])):  # Iterate over all possible detections
+            score = detections['detection_scores'][i].numpy()[0]
+            if score < 0.5:  # Skip detections with a low score
+                continue
 
-    # Process detections (bounding boxes, scores, etc.)
-    # ...
+            box = detections['detection_boxes'][i].numpy()[:4]  # Adjusted to handle multi-dimensional box
+            class_id = int(detections['detection_classes'][i].numpy()[0])
+            class_name = self.get_class_name(class_id)
+
+            image = self.draw_box(image, box, class_name, score)
+
+        return image
+
+    def draw_box(self, image, box, class_name, score):
+        # Assuming box is a 2D array with the required values in the first row
+        ymin, xmin, ymax, xmax = box[0]
+        h, w, _ = image.shape
+        start_point = (int(xmin * w), int(ymin * h))
+        end_point = (int(xmax * w), int(ymax * h))
+        color = (0, 255, 0)  # Green color for the box
+        thickness = 2
+        image = cv2.rectangle(image, start_point, end_point, color, thickness)
+
+        # Put a label near the box
+        label = f"{class_name}: {score:.2f}"
+        image = cv2.putText(image, label, start_point, cv2.FONT_HERSHEY_SIMPLEX, 
+                        0.5, color, 2, cv2.LINE_AA)
+        return image
+
+    def get_class_name(self, class_id):
+        class_names = {1: "person", 2: "bicycle", 3: "car",}  # Complete this based on the model's dataset
+        return class_names.get(class_id, "Unknown")
 
 
-        # Draw bounding boxes and labels on the image
-        # This part needs to be customized based on your TensorFlow model's output
-        # For now, it's a placeholder to show where you'd add this logic
-        # ...
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
