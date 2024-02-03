@@ -5,9 +5,24 @@ import tensorflow as tf
 from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QWidget, QVBoxLayout
 from PyQt5.QtCore import QTimer, Qt, QSize, QThread, pyqtSignal
 from PyQt5.QtGui import QImage, QPixmap,QPalette, QColor
+import os
+
+
+
+# Check if we're running as a PyInstaller bundle
+if getattr(sys, 'frozen', False):
+    # If we are, set the base directory to the directory containing the executable
+    base_dir = sys._MEIPASS
+else:
+    # Otherwise, set it to the current directory
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Construct the absolute path to the resource directory
+model_path = os.path.join(base_dir, 'ssd_mobilenet_v1_coco_2018_01_28/saved_model')
+
 
 # Load the TensorFlow model
-model = tf.saved_model.load('ssd_mobilenet_v1_coco_2018_01_28/saved_model')
+model = tf.saved_model.load(model_path)
 print("Model's input signature:")
 print(model.signatures['serving_default'].structured_input_signature)
 
