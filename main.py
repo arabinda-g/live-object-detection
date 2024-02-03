@@ -4,7 +4,7 @@ import numpy as np
 import tensorflow as tf
 from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QWidget, QVBoxLayout
 from PyQt5.QtCore import QTimer, Qt, QSize
-from PyQt5.QtGui import QImage, QPixmap
+from PyQt5.QtGui import QImage, QPixmap,QPalette, QColor
 
 # Load the TensorFlow model
 model = tf.saved_model.load('ssd_mobilenet_v1_coco_2018_01_28/saved_model')
@@ -107,15 +107,18 @@ class MainWindow(QMainWindow):
             # Take only first 10 boxes
             all_boxes = all_boxes[:10]
 
-                # Get the class ID and label
-            class_id = int(detections['detection_classes'][i].numpy()[0])
-            class_name = self.get_class_name(class_id)
+            #     # Get the class ID and label
+            # class_id = int(detections['detection_classes'][i].numpy()[0])
+            # class_name = self.get_class_name(class_id)
 
             # image = self.draw_box(image, box, class_name, score)
 
             # Loop through box
             for j in range(len(all_boxes)):
-                # if box[j] > 0:
+                # Get the class ID and label
+                class_id = int(detections['detection_classes'][i].numpy()[j])
+                class_name = self.get_class_name(class_id)
+
                 image = self.draw_box(image, all_boxes[j], class_name, score)
 
 
@@ -184,5 +187,16 @@ class MainWindow(QMainWindow):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     main_window = MainWindow()
-    main_window.show()
+    # main_window.show()
+
+    # Create a black background color
+    palette = QPalette()
+    palette.setColor(QPalette.Window, QColor(0, 0, 0))  # RGB values for black
+
+    # Set the black background color to the main window
+    main_window.setPalette(palette)
+
+    # Maximize the window by default
+    main_window.showMaximized()
+
     sys.exit(app.exec_())
